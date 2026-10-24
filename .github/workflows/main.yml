@@ -1,0 +1,40 @@
+name: Build Office Time Tracker APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Unzip Android project
+        run: |
+          unzip -o OfficeTimeTracker-Android-Project.zip -d project
+
+      - name: Build APK
+        working-directory: project/OfficeTimeTracker
+        run: |
+          chmod +x gradlew || true
+          gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Office-Time-Tracker-APK
+          path: project/OfficeTimeTracker/app/build/outputs/apk/debug/app-debug.apk
