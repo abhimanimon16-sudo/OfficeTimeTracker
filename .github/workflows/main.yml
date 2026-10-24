@@ -1,45 +1,49 @@
 name: Build Office Time Tracker APK
 
 on:
-  workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/**'
+workflow_dispatch:
+push:
+paths:
+- '.github/workflows/**'
+- 'OfficeTimeTracker-Android-Project-v2.zip'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+build:
+runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+  - name: Set up Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
 
-      - name: Install Android SDK packages
-        run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+  - name: Install Android SDK packages
+    run: |
+      yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
+      "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Unzip Android project
-        run: |
-          unzip -o OfficeTimeTracker-Android-Project.zip -d project
+  - name: Unzip Android project
+    run: |
+      unzip -o OfficeTimeTracker-Android-Project-v2.zip -d project
+      find project -name settings.gradle -o -name settings.gradle.kts
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+  - name: Set up Gradle
+    uses: gradle/actions/setup-gradle@v4
 
-      - name: Build APK
-        working-directory: project/OfficeTimeTracker
-        run: gradle assembleDebug
+  - name: Build APK
+    run: |
+      PROJECT_DIR="$(dirname "$(find project -name settings.gradle -print -quit)")"
+      cd "$PROJECT_DIR"
+      gradle assembleDebug
+      find app/build/outputs/apk -name '*.apk'
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Office-Time-Tracker-APK
-                   
-          path: project/OfficeTimeTracker/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+  - name: Upload APK
+    uses: actions/upload-artifact@v4
+    with:
+      name: Office-Time-Tracker-APK
+      path: project/**/app/build/outputs/apk/debug/app-debug.apk
+      if-no-files-found: error
