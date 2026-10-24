@@ -10,10 +10,9 @@ paths:
 jobs:
 build:
 runs-on: ubuntu-latest
-
 steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+- name: Checkout repository
+uses: actions/checkout@v4
 
   - name: Set up Java
     uses: actions/setup-java@v4
@@ -26,10 +25,10 @@ steps:
       yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
       "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-  - name: Unzip Android project
+  - name: Unzip new project
     run: |
       unzip -o OfficeTimeTracker-Android-Project-v2.zip -d project
-      find project -name settings.gradle -o -name settings.gradle.kts
+      find project -name settings.gradle -print
 
   - name: Set up Gradle
     uses: gradle/actions/setup-gradle@v4
@@ -37,9 +36,12 @@ steps:
   - name: Build APK
     run: |
       PROJECT_DIR="$(dirname "$(find project -name settings.gradle -print -quit)")"
+      if [ -z "$PROJECT_DIR" ]; then
+        echo "ERROR: settings.gradle not found"
+        exit 1
+      fi
       cd "$PROJECT_DIR"
       gradle assembleDebug
-      find app/build/outputs/apk -name '*.apk'
 
   - name: Upload APK
     uses: actions/upload-artifact@v4
